@@ -51,11 +51,11 @@ urlpatterns = [
     path('event/<str:eventcode_key>/delete_uploaded_images>',views.delete_uploaded_images,name='delete_uploaded_images'),
     path('event/<str:eventcode_key>/wishcenter',views.wishcenter,name='wishcenter'),
 
-    #### TWILIO ####
+    #### TWILIO #####
     path('event/whatsapp',views.whatsapp,name='whatsapp'),
 
 
-
+ 
     #Invites
     path('joinevent/',views.joinevent,name='joinevent'),
 
