@@ -52,7 +52,7 @@ urlpatterns = [
     path('event/<str:eventcode_key>/wishcenter',views.wishcenter,name='wishcenter'),
 
     #### TWILIO #####
-    path('event/whatsapp',views.whatsapp,name='whatsapp'),
+    path('whatsapp/',views.whatsapp,name='whatsapp'),
 
 
  

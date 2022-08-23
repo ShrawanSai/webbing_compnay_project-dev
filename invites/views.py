@@ -334,7 +334,7 @@ def finalizeinvitees(request,eventcode_key):
             whatsapp_message = event.invitation_whatsapp_content
             whatsapp_list = list(invites_pending_phone.values_list('invitee_phone', flat=True))
             whatsapp_list_names = list(invites_pending_phone.values_list('invitee_name', flat=True))
-            b64_img = base64.b64encode(event.image.read())
+            b64_img = base64.b64encode(event.invitation_image.read())
             website_url = ALLOWED_HOSTS[0] + '/visit/' + event.eventcode
             for phonenumber in range(len(whatsapp_list)):
                 send_whatsapp_messages(whatsapp_list[phonenumber],whatsapp_message,whatsapp_list_names[phonenumber],b64_img,website_url)
@@ -722,10 +722,9 @@ def wishcenter(request,eventcode_key):
 
 
 ########## TWILIO #################
-
-@csrf_exempt
 #@ensure_csrf_cookie
 #method_decorator(csrf_protect)
+@csrf_exempt
 def whatsapp(request):
     if request.method == "POST":
         json_data = request.get_json()
@@ -748,5 +747,9 @@ def whatsapp(request):
             }
             response = requests.request("POST", url, headers=headers, data = json.dumps(payload))
             print(response.text.encode('utf8'))
+        return HttpResponse("ok")
+    else:
+        print('here 111')
+        return HttpResponse("ok")
 
    
