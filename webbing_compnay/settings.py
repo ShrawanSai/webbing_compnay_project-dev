@@ -29,6 +29,8 @@ ALLOWED_HOSTS = ["ef86-2405-201-c00e-f09f-45e4-8fc3-4ae8-8301.in.ngrok.io","127.
 CSRF_TRUSTED_ORIGINS = ["https://ef86-2405-201-c00e-f09f-45e4-8fc3-4ae8-8301.in.ngrok.io","http://127.0.0.1:8000"]
 AUTH_USER_MODEL = "accounts.Account"
 
+CSRF_COOKIE_SECURE = False
+
 DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 # Application definition
 

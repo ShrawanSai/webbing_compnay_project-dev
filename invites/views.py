@@ -17,6 +17,9 @@ from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.core.mail import send_mail,send_mass_mail
+from django.views.decorators.csrf import ensure_csrf_cookie
+from django.views.decorators.csrf import csrf_protect
+from django.utils.decorators import method_decorator
 from django.db.models import Count,Q
 from twilio.rest import Client
 from django.views.decorators.csrf import csrf_exempt
@@ -721,26 +724,29 @@ def wishcenter(request,eventcode_key):
 ########## TWILIO #################
 
 @csrf_exempt
+#@ensure_csrf_cookie
+#method_decorator(csrf_protect)
 def whatsapp(request):
-    json_data = request.get_json()
-    print(json_data)
-    #print(json_data)
-    wttype = json_data["type"]
-    if wttype == "message":
-        message = json_data["message"]
-        conversation = json_data["conversation"]
-        _type = message["type"]
+    if request.method == "POST":
+        json_data = request.get_json()
+        print(json_data)
+        #print(json_data)
+        wttype = json_data["type"]
+        if wttype == "message":
+            message = json_data["message"]
+            conversation = json_data["conversation"]
+            _type = message["type"]
 
-        payload = {
-                "to_number": conversation,
-                "type": "text",
-                "message": "Gotcha"
-        }
-        headers = {
-        'x-maytapi-key': '92bde335-a4dd-4724-9729-187e49391276',
-        'Content-Type': 'application/json'
-        }
-        response = requests.request("POST", url, headers=headers, data = json.dumps(payload))
-        print(response.text.encode('utf8'))
+            payload = {
+                    "to_number": conversation,
+                    "type": "text",
+                    "message": "Gotcha"
+            }
+            headers = {
+            'x-maytapi-key': '92bde335-a4dd-4724-9729-187e49391276',
+            'Content-Type': 'application/json'
+            }
+            response = requests.request("POST", url, headers=headers, data = json.dumps(payload))
+            print(response.text.encode('utf8'))
 
    
