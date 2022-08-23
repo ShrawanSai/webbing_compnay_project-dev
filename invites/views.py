@@ -65,7 +65,7 @@ def check_existing_invites(request):
         eventcode = invite.eventcode
         invitation_from = Event.objects.filter(eventcode = eventcode)[0].user
         if len( Invitation.objects.filter(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from )) == 0:
-            Invitation.objects.create(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from, guest_count = invite.invitee_guest_count )
+            Invitation.objects.create(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from, guest_count = invite.invitee_guest_count,rsvp_reject = invite.invitee_rsvp_reject,rsvp_done = invite.invitee_rsvp )
             friendship_calculator(invitation_from,request.user)
 
     
@@ -78,7 +78,7 @@ def check_existing_invites(request):
         eventcode = invite.eventcode
         invitation_from = Event.objects.filter(eventcode = eventcode)[0].user
         if len( Invitation.objects.filter(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from )) == 0:
-            Invitation.objects.create(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from, guest_count = invite.invitee_guest_count )
+            Invitation.objects.create(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from, guest_count = invite.invitee_guest_count,rsvp_reject = invite.invitee_rsvp_reject,rsvp_done = invite.invitee_rsvp  )
             friendship_calculator(invitation_from,request.user)
 # can remove this
 def check_existing_invites2(request):
@@ -296,11 +296,11 @@ def send_whatsapp_messages(phonenumber,message,name, image,website_url):
             "message": "Please RSVP for this invite",
             "buttons": [
                 {
-                "id": "!response 1",
+                "id": "rsvp_confirm_1",
                 "text": "I will be attending"
                 },
                 {
-                "id": "!response 2",
+                "id": "rsvp_confirm_0",
                 "text": "Sorry, I cannot make it!"
                 }
             ],
@@ -727,7 +727,12 @@ def wishcenter(request,eventcode_key):
 @csrf_exempt
 def whatsapp(request):
     if request.method == "POST":
-        json_data = request.get_json()
+        url = "https://api.maytapi.com/api/eed76cd2-bef0-4f09-87c1-1657cbb35b68/23205/sendMessage"
+        headers = {
+            'x-maytapi-key': '92bde335-a4dd-4724-9729-187e49391276',
+            'Content-Type': 'application/json'
+            }
+        json_data = json.loads(request.body)
         print(json_data)
         #print(json_data)
         wttype = json_data["type"]
@@ -736,17 +741,65 @@ def whatsapp(request):
             conversation = json_data["conversation"]
             _type = message["type"]
 
-            payload = {
+            #invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
+            if message['payload'].startswith("rsvp_confirm"):
+                if message['payload'].endswith("1"):
+                    invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
+                    invitee_object.invitee_rsvp = True
+                    invitee_object.save()
+
+                    payload_options_for_gc = {
+                        "to_number": conversation,
+                        "type": "buttons",
+                        "title": "Guest Count",
+                        "message": "How many people will be attending with you?",
+                        "buttons": [
+                            {
+                            "id": "guest_count_0",
+                            "text": "I will be attending alone"
+                            },
+                            {
+                            "id": "guest_count_1",
+                            "text": "1 person besides me"
+                            },
+                            {
+                            "id": "guest_count_2",
+                            "text": "My regular group will be attending"
+                            }
+                        ],
+                        "footer": "This information will help us plan the event better. Thank you for taking the time to fill this in",
+                    }
+                    response = requests.request("POST", url, headers=headers, data = json.dumps(payload_options_for_gc))
+                    print(response.text.encode('utf8'))
+
+            elif message['payload'].startswith("guest_count"):
+                invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
+                if str(message['payload'])[-1] != "2":
+                    invitee_object.invitee_guest_count = int(str(message['payload'])[-1])
+                    invitee_object.save()
+
+                payload_final_confirmation = {
                     "to_number": conversation,
                     "type": "text",
-                    "message": "Gotcha"
-            }
-            headers = {
-            'x-maytapi-key': '92bde335-a4dd-4724-9729-187e49391276',
-            'Content-Type': 'application/json'
-            }
-            response = requests.request("POST", url, headers=headers, data = json.dumps(payload))
-            print(response.text.encode('utf8'))
+                    "message": "Thank you! Your RSVP has been noted. Please reach out to Priyanka for any questions you might have!"
+                }
+                response = requests.request("POST", url, headers=headers, data = json.dumps(payload_final_confirmation))
+                print(response.text.encode('utf8'))
+
+            else:
+                invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
+                invitee_object.invitee_rsvp = True
+                invitee_object.invitee_rsvp_reject = True
+                invitee_object.save()
+                payload_final_reject = {
+                    "to_number": conversation,
+                    "type": "text",
+                    "message": "Oh! We are sorry you are not able to attend. Thanks for taking the time to fill out this information"
+                }
+                response = requests.request("POST", url, headers=headers, data = json.dumps(payload_final_reject))
+                print(response.text.encode('utf8'))
+
+
         return HttpResponse("ok")
     else:
         print('here 111')

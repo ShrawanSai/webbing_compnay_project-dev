@@ -73,6 +73,7 @@ class Invitee(models.Model):
     invitee_email_sent = models.BooleanField(default=False)
     invitee_whatsapp_sent = models.BooleanField(default=False)
     invitee_rsvp = models.BooleanField(default=False)
+    invitee_rsvp_reject = models.BooleanField(default=False)
     invitee_guest_count = models.DecimalField(max_digits=1, decimal_places=0)
     def __str__(self):
         return self.invitee_name
