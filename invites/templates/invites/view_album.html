@@ -1,0 +1,99 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+{{ error }}
+<br>
+<a href ="{% url 'gallery' event.eventcode %}">Go back to Gallery</a>
+<br>
+<h2>{{ event.title }}</h2>
+<h3>{{ event.eventcode }}</h3>
+
+{% if album.album_thumbnail %}
+    <img src = "{{album.album_thumbnail.url}}">
+{% endif %}
+
+<h1>{{ album.album_name }}</h1>
+
+
+<form method="POST" enctype='multipart/form-data'>
+    {% csrf_token %}
+    <label for="album_name">Change Album Name:</label>
+    <input type="text" id="album_name" name="album_name">
+    <button type="submit" name = "change_album_name">Change Album Name</button><br><br>
+
+    <label for="album_thumbnail">Upload a new thumbnail for this Album</label>
+    <input type="file" id="album_thumbnail" name="album_thumbnail"><br>
+    <button type="submit" name = "change_album_thumbnail">Upload file as Album Thumbnail</button><br><br>
+
+
+    <p><label for="approval_status">Album Approved: </label>
+    <select name="approval_status">
+        {% if album.album_approved %}
+            <option value="Yes" selected>Yes</option>
+            <option value="No">No</option>
+        {% else %}
+            <option value="Yes">Yes</option>
+            <option value="No" selected>No</option>
+        {% endif %}
+    </select>
+    
+        <button type="submit" name = "change_approval_status">Change Album Approval Status</button><br><br></p>
+    {% if edit_permission %}
+        <label for="images">Upload more images:</label>
+        <input type="file" id="new_images" name="images" multiple><br><br>
+        <output id="list"></output><br>
+        <button type="submit" name = "add_photos">Upload to Album Album</button>
+    {% endif %}
+</form>
+
+
+
+<form method = "POST" action="{% url 'update_album_content' event.eventcode album.id %}">
+{% csrf_token %}
+<table border="1">
+    <tr>
+        <th>Photo</th>
+        <th>Upload date</th>
+        <th>Title</th>
+        <th>Approve Photos</th>
+        <th>Delete Selected Photos</th>
+    </tr>
+    {% for picture in album_pictures %}
+    <tr>
+        <td><a href = "{% url 'view_image' event.eventcode picture.id %}"><img src = "{{picture.photo.url}}" width="200" height="200"></a></td>
+        <td>{{ picture.photo_created_date }}</td>
+        <td>{% if picture.photo_name_display %}{{ picture.photo_name }}{% endif %}</td>
+        {% if picture.photo_approved %}
+            <td><input type = "checkbox" name = "approved_pictures" value = "{{picture.id}}" checked></td>
+        {% else %}
+            <td><input type = "checkbox" name = "approved_pictures" value = "{{picture.id}}"></td>
+        {% endif %}
+        <td><input type = "checkbox" name = "delete_pictures" value = "{{picture.id}}"></td>
+    </tr>
+    {% endfor %}
+    <tr>
+        <td></td><td></td><td></td><td><input type = "submit" name = "approve_photos" value = "Approve Selected Photos"></td><td><input type = "submit" name = "delete_photos" value = "Delete Selected Photos"></td>
+    </tr>
+</table>
+</form>
+
+
+<script>
+    function handleFileSelect(evt) {
+        // Loop through the FileList and render image files as thumbnails.
+        for (const file of evt.target.files) {
+
+            // Render thumbnail.
+            const span = document.createElement('span')
+            const src = URL.createObjectURL(file)
+            span.innerHTML =
+                `<img style="height: 75px; border: 1px solid #000; margin: 5px"` +
+                `src="${src}" title="${escape(file.name)}">`
+
+            document.getElementById('list').insertBefore(span, null)
+        }
+    }
+
+    document.getElementById('new_images').addEventListener('change', handleFileSelect, false);
+</script>
+{% endblock %}

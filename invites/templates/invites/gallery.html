@@ -1,0 +1,155 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+{{ error }}
+<a href = "{% url 'viewevent' event.eventcode %}">Go back to Event page</a>
+<h1>Gallery</h1>
+<a href ="{% url 'upload_album' event.eventcode %}">Create new Album</a>
+<a href ="{% url 'upload_pictures' event.eventcode %}">Upload new Pictures</a>
+<h1>{{ event.title }}</h1>
+<h4>{{ event.eventcode }}</h4>
+
+
+<h4>Albums Uploaded by me</h4>
+<table border="1">
+    <tr>
+        <th>Album Name</th>
+        <th>Album Thubmnail</th>
+        <th>Album size</th>
+        <th>Created date</th>
+        <th>Approval Status</th>
+    </tr>
+    {% for album in all_albums_by_me %}
+        <tr>
+            <td><a href = "{% url 'view_album' event.eventcode album.id %}">{{ album.album_name }}</a></td>
+            {% if album.album_thumbnail %}
+                <td><img src = "{{album.album_thumbnail.url}}" width="200" height="200"></td>
+            {% else %}
+                <td></td>
+            {% endif %}
+            <td>{{ album.number_of_photos }}</td>
+            <td>{{ album.album_created_date }}</td>
+            
+            <td>
+                <label class="switch">
+                <input type="checkbox" class="checkbox_approval" name = album_{{album.id}} {% if album.album_approved %} checked="checked" {% endif %}">
+                <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+    {% endfor %}
+
+</table><br>
+<br><br>
+
+<h4>Albums Uploaded by your invitees</h4>
+<table border="1">
+    <tr>
+        <a href = "{% url 'viewevent' event.eventcode %}"><th>Album Name</th></a>
+        <th>Album Thubmnail</th>
+        <th>Album size</th>
+        <th>Created date</th>
+        <th>Approval Status</th>
+    </tr>
+    {% for album in all_albums_other %}
+        <tr>
+            <td><a href = "{% url 'view_album' event.eventcode album.id %}">{{ album.album_name }}</a></td>
+            {% if album.album_thumbnail %}
+                <td><img src = "{{album.album_thumbnail.url}}" width="200" height="200"></td>
+            {% else %}
+                <td></td>
+            {% endif %}
+            <td>{{ album.number_of_photos }}</td>
+            <td>{{ album.album_created_date }}</td>
+            <td>
+                <label class="switch">
+                <input type="checkbox" class="checkbox_approval" name = album_{{album.id}} {% if album.album_approved %} checked="checked" {% endif %}>
+                <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+    {% endfor %}
+
+</table><br>
+<hr>
+<h4>Individual Pictures Uploaded by me</h4>
+<table border="1">
+    <form method = "POST" action="{% url 'delete_uploaded_images' event.eventcode %}">
+        {% csrf_token %}
+    <tr>
+        <th>Image</th>
+        <th>Upload date</th>
+        <th>Title</th>
+        <th>Approval Status</th>
+        <th>Delete Selected Photos</th>
+    </tr>
+    {% for pic in photos_by_me %}
+        <tr>
+            <td><a href = "{% url 'view_image' event.eventcode pic.id %}"><img src = "{{pic.photo.url}}" width="200" height="200"></a></td>
+            <td>{{ pic.photo_created_date }}</td>
+            <td>{% if pic.photo_name_display %}{{ pic.photo_name }}{% endif %}</td>
+            <td>
+                <label class="switch">
+                <input type="checkbox" class="checkbox_approval" name = photo_{{pic.id}} {% if pic.photo_approved %} checked="checked" {% endif %}>
+                <span class="slider round"></span>
+                </label>
+            </td>
+            <td><input type = "checkbox" name = "delete_individual_photos_by_me" value = "{{pic.id}}"></td>
+        </tr>
+    {% endfor %}
+    <tr>
+        <td></td><td></td><td></td><td></td><td><input type = "submit" name = "delete_individual_photos_by_me_option" value = "Delete Selected Photos"></td>
+    </tr>
+    </form>
+
+</table><br><br>
+<h4>Individual Pictures Uploaded by your invitees</h4>
+<table border="1">
+    <form method = "POST" action="{% url 'delete_uploaded_images' event.eventcode %}">
+        {% csrf_token %}
+    <tr>
+        <th>Image</th>
+        <th>Upload date</th>
+        <th>Title</th>
+        <th>Uploaded By</th>
+        <th>Approval Status</th>
+        <th>Delete Selected Photos</th>
+    </tr>
+    {% for pic in photos_by_others %}
+        <tr>
+            <td><a href = "{% url 'view_image' event.eventcode pic.id %}"><img src = "{{pic.photo.url}}" width="200" height="200"></a></td>
+            <td>{{ pic.photo_created_date }}</td>
+            <td>{% if pic.photo_name_display %}{{ pic.photo_name }}{% endif %}</td>
+            <td>{{pic.photo_poster}}</td>
+            <td>
+                <label class="switch">
+                <input type="checkbox" class="checkbox_approval" name = photo_{{pic.id}} {% if pic.photo_approved %} checked="checked" {% endif %}>
+                <span class="slider round"></span>
+                </label>
+            </td>
+            <td><input type = "checkbox" name = "delete_individual_photos_by_others" value = "{{pic.id}}"></td>
+        </tr>
+    {% endfor %}
+    <tr>
+        <td></td><td></td><td></td><td></td><td></td><td><input type = "submit" name = "delete_individual_photos_by_others_option" value = "Delete Selected Photos"></td>
+    </tr>
+</form>
+</table>
+
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script> <!-- Import Jquery Here-->
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.checkbox_approval').change(function () {
+            $.post("/event/{{event.eventcode}}/alter_approval_status", {
+                id: this.name,
+                isapproved: this.checked,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            });
+        });
+    }); 
+
+
+</script>
+
+{% endblock %}
+

@@ -1,0 +1,30 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+{{ error }}
+<br>
+<a href ="{% url 'gallery' event.eventcode %}">Go back to Gallery</a>
+<br>
+<h1>{{ event.title }}</h1>
+<h3>{{ event.eventcode }}</h3>
+<h2>Upload Pics</h2>
+
+<h1>Single photo with caption</h1>
+<form method="POST" enctype='multipart/form-data'>
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit">Upload Photo</button>
+</form>
+<hr>
+
+<h1>Upload multiple pictures at once</h1>
+<h5>Note: These images will not be assigned to any album</h5>
+
+<form method="POST" enctype='multipart/form-data'>
+    {% csrf_token %}
+    <label for="images">Upload Images:</label>
+    <input type="file" id="images" name="images" multiple><br><br>
+    <button type="submit" name = "Multiphotoupload" value = "Multiphotoupload">Upload photos</button>
+</form>
+
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+
+<h1>Create Event</h1>
+{{ error }}
+<form method="POST">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit">Create Event</button>
+</form>
+{% endblock %}

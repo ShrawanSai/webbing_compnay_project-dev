@@ -1,0 +1,34 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+{{ error }}
+<br>
+<a href ="{% url 'gallery' event.eventcode %}">Go back to Gallery</a>
+<br>
+{% if album %}
+	<a href ="{% url 'view_album' event.eventcode album.id %}">Go to this Photo's Album</a>
+{% endif %}
+<br>
+<h2>{{ event.title }}</h2>
+<h3>{{ event.eventcode }}</h3>
+{% if photo.photo_name_display %}
+	<h1>Photo title: {{ photo.photo_name }}</h1>
+{% endif %}
+
+
+<table>
+	<tr>
+		<td>
+			<form method="POST">
+				{% csrf_token %}
+				{{form.as_p}}
+				<button type="submit">Update Photo Details</button>
+			</form>
+		</td>
+		<td>
+			<img src = "{{photo.photo.url}}">
+		</td>
+	</tr>
+</table>
+
+{% endblock %}

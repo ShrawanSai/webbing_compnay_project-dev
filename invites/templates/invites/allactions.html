@@ -1,0 +1,67 @@
+
+{% extends 'invites/base.html' %}
+
+{% block content %}
+<h1>Welcome</h1>
+<br><br>
+<h2>Your Events</h2>
+<h3>Here are all your upcoming events</h3>
+
+<ul>
+    {% for event in events %}
+    <li>
+        <a href = "{% url 'viewevent' event.eventcode %}">
+        <h5>{{ event.title }}</h5>
+        <h5>{{ event.eventcode }}</h5>
+        <h6>Event on : {{ event.eventstartdate }}</h6>
+        </a>
+    </li>
+
+    {% endfor %}
+</ul>
+
+<hr>
+
+<h3>Here are all your completed events</h3>
+<ul>
+    {% for event in completed_events %}
+    <li>
+        <a href = "{% url 'viewevent' event.eventcode %}">
+        <h5>{{ event.title }}</h5>
+        <h5>{{ event.eventcode }}</h5>
+        {% if event.datecompleted %}
+            <h6>Event held on {{ event.datecompleted }}</h6>
+        {% else %}
+            <h6>Event held on {{ event.eventstartdate }}</h6>
+        {% endif %}
+        </a>
+    </li>
+
+    {% endfor %}
+</ul>
+<br><br><hr><hr><br><br>
+<h2>Your Invitations</h2>
+<ul>
+    {% for invitation in my_invitations %}
+    <li>
+        <h5>You have been invited to <a href ="{% url 'events:eventhomepage' invitation.eventcode %}">{{ invitation.eventcode }}</a> by {{ invitation.invitation_from }}</h5>
+    </li>
+
+    {% endfor %}
+</ul>
+<br>
+<h3>Have a unique code?</h3>
+<form method="POST" action="{% url 'joinevent'%}">
+    {% csrf_token %}
+    <label>Enter Code here:</label><br>
+    <input type="text" name="rsvp_code"><br>
+    <button type="submit">Join Event</button>
+</form>
+{% if messages %}
+<ul class="messages">
+    {% for message in messages %}
+    <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+    {% endfor %}
+</ul>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,99 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+
+<h1>Welcome to Event Scheduler</h1>
+<h2>{{ event.title }}</h2>
+<a href = "{% url 'viewevent' event.eventcode %}">Go back to Event page</a>
+
+{% if date_range %}
+<h4>Select the all active dates of your event you want to include on your website</h4>
+<form method="POST">
+    {% csrf_token %}
+    {% for date in date_range %}
+        <input type="checkbox" name="selected_date" value = "{{ date }}">
+
+        <label for="selected_date"> {{ date }}</label><br>
+    {% endfor %}
+    <input type="submit" value="Select these dates as part of my event">
+</form>
+{% endif %}
+
+{% if selected_dates %}
+<h4>Great! Now it is time to assign a name for each day</h4>
+<form method="POST">
+    {% csrf_token %}
+    {% for date in selected_dates %}
+        <label>Enter a title for the event on {{date}}: </label>
+        <input type="text" name="{{ date }}" required><br>
+    {% endfor %}
+    <input type="submit" value="Finalize these as titles for your event days">
+</form>
+{% endif %}
+
+
+{% if form_map %}
+<h4>Add all your schedule items under each corresponding day one below</h4>
+<form method="POST" action="{% url 'changeeventdates' event.eventcode %}">
+    {% csrf_token %}
+    <button type="submit">Reset event dates</button>
+    <label>(Clicking this button would delete all schedule items you've added so far) </label>
+</form>
+
+    {% for date, form in form_map.items %}
+        <table border="1">
+            <tr>
+                <th><p>{{ date }} : {{ form.0 }}</p> </th>
+                <th><p>Schedule for the day so far</p><br> </th>
+            </tr>
+            <tr>
+                <td>
+                    <form method="POST" enctype='multipart/form-data'>
+                        {% csrf_token %}
+                        <label for="date">Date:</label> 
+                        <input type="text" name="date" value="{{ date|date:'Y-m-d' }}" readonly>
+                        <label for="dayname">Event Day Title:</label> 
+                        <input type="text" name="dayname" value="{{ form.0 }}" readonly>
+                        {{form.1.as_p}}
+                        <button type="submit">Add item to this day</button>
+                    </form>
+                </td>
+                <td>
+                    <form method = "POST" action="{% url 'changescheduleitems' event.eventcode %}">
+                        {% csrf_token %}
+                        <table border="1">
+                            <tr>
+                                <th>Item name</th>
+                                <th>Item Start Time</th>
+                                <th>Item End Time</th>
+                                <th>Item Details</th>
+                                <th>Item Icon image</th>
+                                <th>Select</th>
+                            </tr>
+                            {% for schedule in form.2 %}
+                                <tr>
+                                    <td>{{schedule.item_name}}</td>
+                                    <td>{{schedule.item_start_time}}</td>
+                                    <td>{{schedule.item_end_time}}</td>
+                                    <td>{{schedule.item_optional_detail}}</td>
+                                    {% if schedule.item_icon_image %}
+                                        <td><img src = "{{schedule.item_icon_image.url}}" width="60" height="60"></td>
+                                    {% else %}
+                                        <td>No Image uploaded </td>
+                                    {% endif %}
+                                    <td><input type = "checkbox" name = "delete_schedule_items" value = "{{schedule.id}}"></td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                        <input type = "submit" name = "Delete_Selected" value = "Delete Selected Items">
+                    </form>
+                </td>
+            </tr>
+            
+        </table>
+        <hr>
+    {% endfor %}
+
+{% endif %}
+
+{% endblock %}

@@ -1,0 +1,96 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+
+<a href = "{% url 'viewevent' event.eventcode %}">Go back to Event page</a>
+<h1>Let's send invites</h1>
+<h4>{{ event.title }}</h4>
+
+<h2>RSVP'd Invitations</h2>
+
+<h4>Will be attending</h4>
+    <table border="1">
+        <tr>
+            <th>Invitee</th>
+            <th>Number of guests</th>
+            <th>RSVP message (if any)</th>
+        </tr>
+        {% for invitee in accepted_rsvpd_invitations %}
+        <tr> 
+            <td>{{ invitee.user }}</td>
+            <td>{{ invitee.guest_count }}</td>
+            <td>
+                {% if invitee.remarks %}
+                    {{ invitee.remarks }}
+                {% else %} 
+                    <p>NA</p>   
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+        {% for invitee in non_registered_rsvpd %}
+        <tr> 
+            <td>{{ invitee.name_for_invitation_without_registering }}</td>
+            <td>{{ invitee.guest_count }}</td>
+            <td>
+                {% if invitee.remarks %}
+                    {{ invitee.remarks }}
+                {% else %} 
+                    <p>NA</p>   
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+<br>
+<h4>Will not be attending</h4>
+    <table border="1">
+        <tr>
+            <th>Invitee</th>
+            <th>RSVP message (if any)</th>
+        </tr>
+        {% for invitee in rejected_rsvpd_invitations %}
+        <tr> 
+            <td>{{ invitee.user }}</td>
+            <td>
+                {% if invitee.remarks %}
+                    {{ invitee.remarks }}
+                {% else %} 
+                    <p>NA</p>   
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+<br><br>
+<h2>RSVP Pending Invitations</h2>
+<table border="1">
+    <tr>
+        <th>Invitee</th>
+        <th>Invitee Expected Guest Count</th>
+    </tr>
+    {% for invitee in pending_invitations %}
+    <tr> 
+        <td>{{ invitee.user }}</td>
+        <td>{{ invitee.guest_count }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+
+<h2>RSVP Pending Invitations from unregistered users</h2>
+<table border="1">
+    <tr>
+        <th>Invitee</th>
+        <th>Invitee Expected Guest Count</th>
+    </tr>
+    {% for invitee in non_registered_invites %}
+    <tr> 
+        <td>{{ invitee.invitee_name }}</td>
+        <td>{{ invitee.invitee_guest_count }}</td>
+    </tr>
+    {% endfor %}
+</table>
+
+{% endblock %}

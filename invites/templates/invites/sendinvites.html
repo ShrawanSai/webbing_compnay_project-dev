@@ -1,0 +1,97 @@
+
+{% extends 'invites/base.html' %}
+
+{% block content %}
+<a href = "{% url 'viewevent' event.eventcode %}">Go back to Event page</a>
+<h1>Let's send invites</h1>
+<h4>{{ event.title }}</h4>
+{{ error }}
+<form method="POST">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit">Add Invitee</button>
+</form>
+
+<h2> Your Friends </h2>
+<form method="POST" action="{% url 'addfriendinvites' event.eventcode %}">
+    {% csrf_token %}
+
+    <label for="cars">Pick a friend:</label>
+
+    <select name="friend" id="friend">
+        {% for f in uninvited_friends %}
+            <option value="{{f.id}}">{{f.username}}</option>
+        {% endfor %}
+    </select>
+    <br>
+    <label for="friend_guest_count">Expected Guest Count</label>
+    <input type="number" name="friend_guest_count" min="0" id = "friend_guest_count">
+
+    <input type = "submit" name = "Add_Friend" value = "Add Friend">
+</form>
+<hr>
+{% for f in invited_friends %}
+    {{f}}
+{% endfor %}
+<h2>Pending Invitations</h2>
+<form method = "POST" action="{% url 'finalizeinvitees' event.eventcode %}">
+    {% csrf_token %}
+    <table border="1">
+        <tr>
+            <th>Invitee Name</th>
+            <th>Invitee Email ID</th>
+            <th>Invitee Phone Number</th>
+            <th>Invitee Expected Guest Count</th>
+            <th>Select</th>
+        </tr>
+        {% for invitee in invites_pending %}
+        <tr> 
+            <td>{{ invitee.invitee_name }}</td>
+            <td>{{ invitee.invitee_email }}</td>
+            <td>{{ invitee.invitee_phone }}</td>
+            <td>{{ invitee.invitee_guest_count }}</td>
+            <td><input type = "checkbox" name = "finalize_invitees" value = "{{invitee.id}}"></td>
+        </tr>
+        {% endfor %}
+        <tr> 
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td> <input type = "checkbox" onClick="toggle(this)"></td>
+        </tr>
+    </table>
+   
+    <br><br>
+    <input type = "submit" name = "Delete_Selected" value = "Delete Selected">
+    <input type = "submit" name = "Email_Selected" value = "Email Selected">
+</form>
+<script>
+        function toggle(source) {
+            checkboxes = document.getElementsByName('finalize_invitees');
+            for (var i = 0, n = checkboxes.length; i < n; i++) {
+                checkboxes[i].checked = source.checked;
+            }
+        }
+</script>
+<br><br><br><br>
+
+<h2>Invitations gone out</h2>
+    <table border="1">
+        <tr>
+            <th>Invitee Name</th>
+            <th>Invitee Email ID</th>
+            <th>Invitee Phone Number</th>
+            <th>Invitee Expected Guest Count</th>
+        </tr>
+        {% for invitee in invited_guests %}
+        <tr> 
+            <td>{{ invitee.invitee_name }}</td>
+            <td>{{ invitee.invitee_email }}</td>
+            <td>{{ invitee.invitee_phone }}</td>
+            <td>{{ invitee.invitee_guest_count }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+
+{% endblock %}

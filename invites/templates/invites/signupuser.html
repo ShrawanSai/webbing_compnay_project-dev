@@ -1,0 +1,15 @@
+
+{% extends 'invites/base.html' %}
+
+{% block content %}
+
+<h1>Sign up</h1>
+{{ error }}
+<div class="shadow-lg p-3 mb-5 bg-body rounded">
+    <form method="POST">
+        {% csrf_token %}
+        {{form.as_p}}
+        <button type="submit">Signup</button>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+
+{% extends 'invites/base.html' %}
+
+{% block content %}
+<head><title>Login</title></head>
+<h1>Login Page</h1>
+{% if error %}
+<div class="alert alert-danger">
+    <p>{{ error }}</p>
+</div>
+{% endif %}
+<form method="POST" class="form-signin">
+    {% csrf_token %}
+    {{form.as_p}}
+    <button type="submit">Login</button>
+</form>
+{% endblock %}

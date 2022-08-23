@@ -1,0 +1,56 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+{{ error }}
+<a href = "{% url 'viewevent' event.eventcode %}">Go back to Event page</a>
+
+<h1>{{ event.title }}</h1>
+<h4>{{ event.eventcode }}</h4>
+
+
+<h4>Wishes posted</h4>
+<table border="1">
+    <tr>
+        <th>Wish Poster</th>
+        <th>Wish Photo</th>
+        <th>Wish byline</th>
+        <th>Wish posted date</th>
+        <th>Approval Status</th>
+    </tr>
+    {% for wish in all_wishes %}
+        <tr>
+            <td>{{ wish.wish_poster }}</a></td>
+            {% if wish.wish_photo %}
+                <td><img src = "{{wish.wish_photo.url}}" width="200" height="200"></td>
+            {% else %}
+                <td></td>
+            {% endif %}
+            <td>{{ wish.wish_byline }}</td>
+            <td>{{ wish.wish_created_date }}</td>
+            <td>
+                <label class="switch">
+                <input type="checkbox" class="checkbox_approval" name = wish_{{wish.id}} {% if wish.wish_approved %} checked="checked" {% endif %}">
+                <span class="slider round"></span>
+                </label>
+            </td>
+        </tr>
+    {% endfor %}
+
+</table><br>
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script> <!-- Import Jquery Here-->
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('.checkbox_approval').change(function () {
+            $.post("/event/{{event.eventcode}}/alter_approval_status", {
+                id: this.name,
+                isapproved: this.checked,
+                csrfmiddlewaretoken: '{{ csrf_token }}'
+            });
+        });
+    }); 
+
+
+</script>
+
+{% endblock %}
+

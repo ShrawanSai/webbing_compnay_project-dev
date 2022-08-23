@@ -1,0 +1,50 @@
+{% extends 'invites/base.html' %}
+
+{% block content %}
+{{ error }}
+<a href = "{% url 'sendinvites' event.eventcode %}">Send Invites for this event</a>
+<a href = "{% url 'viewrsvps' event.eventcode %}">View RSVPs</a>
+{% if event.scheduling_option %}
+<a href = "{% url 'eventscheduler' event.eventcode %}">Edit Schedule for event</a>
+{% endif %}
+{% if event.gallery_option %}
+<a href ="{% url 'gallery' event.eventcode %}">Gallery</a>
+{% endif %}
+{% if event.wishes_option %}
+<a href ="{% url 'wishcenter' event.eventcode %}">Wish Center</a>
+{% endif %}
+<a href ="{% url 'events:eventhomepage' event.eventcode %}">Preview my website</a>
+
+
+
+<h1>{{ event.title }}</h1>
+<h3>{{ event.eventcode }}</h3>
+{% if event.datecompleted %}
+    <h4>This Event ended on {{ event.datecompleted }}</h4>
+{% else %}
+    <h5>This event is scheduled for : {{ event.eventstartdate }}</h5>
+{% endif %}
+
+<form method="POST" enctype='multipart/form-data'>
+    {% csrf_token %}
+    {{form.as_p}}
+    {{ form.media }}
+    <button type="submit">Update Event Details</button>
+</form>
+
+{% if event.rsvp_code %}
+<h5>RSVP Code: {{ event.rsvp_code }}</h5>
+{% endif %}
+
+
+<form method="POST" action="{% url 'completeevent' event.eventcode %}">
+    {% csrf_token %}
+    <button type="submit">Click here to mark this event as complete</button>
+</form>
+
+<form method="POST" action="{% url 'deleteevent' event.eventcode %}">
+    {% csrf_token %}
+    <button type="submit">Click here to delete this event</button>
+</form>
+
+{% endblock %}
