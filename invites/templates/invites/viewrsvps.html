@@ -28,16 +28,12 @@
             </td>
         </tr>
         {% endfor %}
-        {% for invitee in non_registered_rsvpd %}
+        {% for invitee in non_registered_rsvp_invites_accepted %}
         <tr> 
-            <td>{{ invitee.name_for_invitation_without_registering }}</td>
-            <td>{{ invitee.guest_count }}</td>
+            <td>{{ invitee.invitee_name }}</td>
+            <td>{{ invitee.invitee_guest_count }}</td>
             <td>
-                {% if invitee.remarks %}
-                    {{ invitee.remarks }}
-                {% else %} 
-                    <p>NA</p>   
-                {% endif %}
+                <p>NA</p>   
             </td>
         </tr>
         {% endfor %}
@@ -62,6 +58,14 @@
             </td>
         </tr>
         {% endfor %}
+        {% for invitee in non_registered_rsvp_invites_rejected %}
+        <tr> 
+            <td>{{ invitee.invitee_name }}</td>
+            <td>
+                <p>NA</p>   
+            </td>
+        </tr>
+        {% endfor %}
     </table>
 <br><br>
 <h2>RSVP Pending Invitations</h2>
@@ -76,21 +80,14 @@
         <td>{{ invitee.guest_count }}</td>
     </tr>
     {% endfor %}
-</table>
-
-
-<h2>RSVP Pending Invitations from unregistered users</h2>
-<table border="1">
-    <tr>
-        <th>Invitee</th>
-        <th>Invitee Expected Guest Count</th>
-    </tr>
-    {% for invitee in non_registered_invites %}
+    {% for invitee in non_registered_invites_pending %}
     <tr> 
         <td>{{ invitee.invitee_name }}</td>
         <td>{{ invitee.invitee_guest_count }}</td>
     </tr>
     {% endfor %}
 </table>
+
+
 
 {% endblock %}

@@ -2,7 +2,7 @@ from django.forms import ModelForm
 from django import forms
 from django.contrib.auth.models import User
 from django.contrib.auth.forms import UserCreationForm,UserChangeForm 
-from events.models import Event,Invitee,Schedule,EventPhoto
+from events.models import Event,Invitee,Schedule,EventPhoto,EventPhotoAlbum
 from .widgets import DatePickerInput, TimePickerInput, DateTimePickerInput
 from django.core.exceptions import ValidationError
 from django.contrib.auth import get_user_model  
@@ -16,14 +16,20 @@ class DateInput(forms.DateInput):
 
 class CustomUserCreationForm(UserCreationForm):  
   
-    password1 = forms.CharField(widget=forms.PasswordInput)  
+    password1 = forms.CharField(label='Password', widget=forms.PasswordInput)  
     password2 = forms.CharField(label='Confirm Password', widget=forms.PasswordInput)  
     #phonenumber = PhoneNumberField(widget=forms.TextInput(attrs={'placeholder': 'Phone'}))
   
     class Meta:  
         model = Account  
         fields = ('email', 'phone_number', 'username')  
-      
+
+    labels = {
+        'phone_number' : "PHONE NUMBER (Include country code as well)"
+    }
+    
+    
+
     def clean_email(self):  
         email = self.cleaned_data.get('email')  
         qs = User.objects.filter(email=email)  
@@ -164,12 +170,14 @@ class EventPhotoFormforOwner(ModelForm):
         model = EventPhoto
         fields = ['photo_name','photo_album','photo_approved','photo_name_display','photo_carousel_picture']
         def __init__(self, *args, **kwargs):
-            super(ScheduleItemForm, self).__init__(*args, **kwargs)
+            super(EventPhotoFormforOwner, self).__init__(*args, **kwargs)
             self.fields['photo_name'].required = False
             self.fields['photo_album'].required = False
             self.fields['photo_approved'].required = False
             self.fields['photo_name_display'].required = False
             self.fields['photo_carousel_picture'].required = False
+            #print(EventPhotoAlbum.objects.filter(album_eventcode=self.instance.photo_eventcode))
+            self.fields['photo_album'].queryset = EventPhotoAlbum.objects.filter(album_eventcode=self.instance.photo_eventcode)
 
 
 

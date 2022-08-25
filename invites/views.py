@@ -82,12 +82,17 @@ def check_existing_invites(request):
             friendship_calculator(invitation_from,request.user)
 # can remove this
 def check_existing_invites2(request):
-    invitations = Invitation.objects.filter(email_for_invitation_without_registering = request.user.email)
+    invitations = Invitation.objects.filter(rsvp_done = False)
     for invite in invitations:
-        invite.user = request.user
-        invite.email_for_invitation_without_registering = None
-        invite.name_for_invitation_without_registering = None
-        invite.phone_for_invitation_without_registering = None
+        invite_receiver  = invite.user
+        invitee_obj = Invitee.objects.filter(invitee_phone = invite_receiver.phone_number,eventcode = invite.eventcode)
+        if len(invitee_obj) > 0:
+            invitee_obj = invitee_obj[0]
+            invite.rsvp_done = invitee_obj.invitee_rsvp
+            invite.rsvp_reject = invitee_obj.invitee_rsvp_reject
+            if invitee_obj.invitee_rsvp:
+                if invitee_obj.invitee_guest_count <= 2:
+                    invite.guest_count = invitee_obj.invitee_guest_count
         invite.save()
     
 def signupuser(request):
@@ -109,15 +114,44 @@ def signupuser(request):
             return render(request,'invites/signupuser.html',{'form':CustomUserCreationForm(),'error':e})
 
 def loginuser(request):
+    print('in here')
     if request.method == 'GET':
-        return render(request,'invites/loginuser.html',{'form':AuthenticationForm()})
+        return render(request,'invites/loginsignupuser.html',{'signup_form':CustomUserCreationForm(),'loginform':AuthenticationForm()})
     else:
-        user = authenticate(request,username = request.POST['username'],password = request.POST['password'])
-        if user is None:
-            return render(request,'invites/loginuser.html',{'form':AuthenticationForm(),'error':'Username and Password do not match'})
+        
+        if "signup" in request.POST:
+            
+            signup_form = CustomUserCreationForm(request.POST)
+            try:
+                if signup_form.is_valid():
+                    user = signup_form.save()
+                    login(request,user)
+                    if "next" in request.POST:
+                        return redirect(request.POST.get('next'))
+                    return redirect('allactions')
+                else:
+                    errors = list(signup_form.errors.values())
+                    errors = [item for sublist in errors for item in sublist]
+                    print(errors)
+                    errors = "\n\n".join(errors)
+                    print(errors)
+                    #return HttpResponse(signup_form.errors.values())
+                    return render(request,'invites/loginsignupuser.html',{'signup_form':CustomUserCreationForm(),'loginform':AuthenticationForm(),'error': errors})
+            except IntegrityError:
+                return render(request,'invites/loginsignupuser.html',{'signup_form':CustomUserCreationForm(),'loginform':AuthenticationForm(),'error':'That username is taken'})
+
+            except Exception as e:
+                return render(request,'invites/loginsignupuser.html',{'signup_form':CustomUserCreationForm(),'loginform':AuthenticationForm(),'error':e})
         else:
-            login(request,user)
-            return redirect('allactions')
+            user = authenticate(request,username = request.POST['username'],password = request.POST['password'])
+            if user is None:
+                return render(request,'invites/loginsignupuser.html',{'signup_form':CustomUserCreationForm(),'loginform':AuthenticationForm(),'error':'Username and Password do not match'})
+            else:
+                print('logged in')
+                login(request,user)
+                if "next" in request.POST:
+                    return redirect(request.POST.get('next'))
+                return redirect('allactions')
         
 @login_required
 def logoutuser(request):
@@ -128,11 +162,13 @@ def logoutuser(request):
 
 @login_required
 def home(request):
-    return render(request,'invites/home.html')
+    return redirect('allactions')
+
+    #return render(request,'invites/loginsignupuser.html')
 @login_required
 def allactions(request):
     check_existing_invites(request)
-    #check_existing_invites2(request)
+    check_existing_invites2(request)
     events = Event.objects.filter(user = request.user, mark_event_as_completed=False)
     completed_events = Event.objects.filter(user = request.user, mark_event_as_completed=True).order_by('-eventstartdate')
     invitations = Invitation.objects.filter(user = request.user)
@@ -243,17 +279,20 @@ def sendinvites(request,eventcode_key):
             
             if len(receiver_p) == 0 and len(receiver_e) == 0:
                 reciever = request.user   
+                print("account does not exist")
+                print(receiver_p,receiver_e)
             else:
                 if len(receiver_p) == 1:
                     reciever = receiver_p[0]
                 else:
                     reciever = receiver_e[0]
-                Invitation.objects.create(user = reciever ,eventcode = event ,invitation_from = event.user ,rsvp_done = False, )
-                friendship_calculator(event.user,reciever)
+
+            
             new_invitee.invitee = reciever
             new_invitee.save()
             return redirect('sendinvites',eventcode_key = eventcode_key)
         except ValueError as e:
+            print('Not working!', e)
             return render(request,'invites/sendinvites.html',{'form':InviteeForm(),'error':e,'event':event, 'invited_guests':invited_guests,'invites_pending':invites_pending,'uninvited_friends':uninvited_friends,'invited_friends':invited_friends})
    
 def send_whatsapp_messages(phonenumber,message,name, image,website_url):
@@ -324,7 +363,11 @@ def finalizeinvitees(request,eventcode_key):
 
             email_list = request.POST.getlist('finalize_invitees',[])
             email_list = Invitee.objects.filter(id__in = email_list)
-    
+
+            for invitee_obj in email_list:
+                Invitation.objects.create(user = invitee_obj.invitee ,eventcode = event ,invitation_from = event.user ,rsvp_done = False,guest_count = invitee_obj.invitee_guest_count)
+                print(invitee_obj.invitee,event.user, "Invitation created")
+                friendship_calculator(event.user,invitee_obj.invitee)
 
             invited_guests = email_list.filter(invitee_email_sent = True)
             invites_pending = email_list.filter(invitee_email_sent = False,invitee_whatsapp_sent = False)
@@ -354,11 +397,26 @@ def finalizeinvitees(request,eventcode_key):
 @login_required
 def viewrsvps(request,eventcode_key):
     event = Event.objects.get(user = request.user, eventcode = eventcode_key)
+    
     accepted_rsvpd_invitations = Invitation.objects.filter(eventcode = event, invitation_from = request.user, rsvp_done = True, rsvp_reject = False).exclude(user = request.user)
     rejected_rsvpd_invitations = Invitation.objects.filter(eventcode = event, invitation_from = request.user, rsvp_done = True, rsvp_reject = True).exclude(user = request.user)
     pending_invitations = Invitation.objects.filter(eventcode = event, invitation_from = request.user, rsvp_done = False)
-    non_registered_invites = Invitee.objects.filter(invitee = event.user, eventcode = event, invitee_email_sent = True)
-    print(non_registered_invites)
+
+    phone_numbers_of_accepted_rsvpd_invitations = accepted_rsvpd_invitations.values_list('user', flat=True)
+    phone_numbers_of_accepted_rsvpd_invitations = Account.objects.filter(pk__in=phone_numbers_of_accepted_rsvpd_invitations)
+    
+    phone_numbers_of_accepted_rsvpd_invitations = [u.phone_number for u in phone_numbers_of_accepted_rsvpd_invitations]
+    
+
+    non_registered_rsvp_invites_accepted = Invitee.objects.filter(eventcode = event,invitee_rsvp = True, invitee_rsvp_reject = False)
+    non_registered_rsvp_invites_accepted  = [invitee_obj for invitee_obj in non_registered_rsvp_invites_accepted if invitee_obj.invitee_phone not in phone_numbers_of_accepted_rsvpd_invitations]
+
+    non_registered_rsvp_invites_rejected = Invitee.objects.filter(eventcode = event,invitee_rsvp = True, invitee_rsvp_reject = True)
+    non_registered_rsvp_invites_rejected  = [invitee_obj for invitee_obj in non_registered_rsvp_invites_rejected if invitee_obj.invitee_phone not in phone_numbers_of_accepted_rsvpd_invitations]
+
+    non_registered_invites_pending = Invitee.objects.filter(Q(invitee_email_sent=True) | Q(invitee_whatsapp_sent=True), invitee = event.user, eventcode = event)
+
+
     if request.method == 'GET':
         return render(
             request,
@@ -366,9 +424,11 @@ def viewrsvps(request,eventcode_key):
             {
                 'event':event,
                 'accepted_rsvpd_invitations':accepted_rsvpd_invitations,
+                'non_registered_rsvp_invites_accepted':non_registered_rsvp_invites_accepted,
                 'rejected_rsvpd_invitations':rejected_rsvpd_invitations,
+                'non_registered_rsvp_invites_rejected':non_registered_rsvp_invites_rejected,
                 'pending_invitations':pending_invitations,
-                'non_registered_invites':non_registered_invites
+                'non_registered_invites_pending':non_registered_invites_pending
                 }
             )
 
@@ -675,6 +735,7 @@ def view_image(request,eventcode_key, photo_id):
 
     if request.method == 'GET':
         form = EventPhotoFormforOwner(instance = photo)
+        form.fields['photo_album'].queryset = EventPhotoAlbum.objects.filter(album_eventcode=event)
         return render(request,'invites/view_image.html',{'event':event,'form':form,'photo':photo,'album':album})
     
     else:
@@ -740,13 +801,16 @@ def whatsapp(request):
             message = json_data["message"]
             conversation = json_data["conversation"]
             _type = message["type"]
-
+            if message["fromMe"]:
+                return HttpResponse("ok")
             #invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
             if message['payload'].startswith("rsvp_confirm"):
                 if message['payload'].endswith("1"):
                     invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
                     invitee_object.invitee_rsvp = True
+                    invitee_object.invitee_rsvp_reject = False
                     invitee_object.save()
+                    print(invitee_object.__dict__)
 
                     payload_options_for_gc = {
                         "to_number": conversation,
@@ -771,12 +835,28 @@ def whatsapp(request):
                     }
                     response = requests.request("POST", url, headers=headers, data = json.dumps(payload_options_for_gc))
                     print(response.text.encode('utf8'))
+                
+                else:
+                    invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
+                    invitee_object.invitee_rsvp = True
+                    invitee_object.invitee_rsvp_reject = True
+                    invitee_object.save()
+                    print(invitee_object.__dict__)
+                    payload_final_reject = {
+                        "to_number": conversation,
+                        "type": "text",
+                        "message": "Oh! We are sorry you are not able to attend. Thanks for taking the time to fill out this information"
+                    }
+                    response = requests.request("POST", url, headers=headers, data = json.dumps(payload_final_reject))
+                    print(response.text.encode('utf8'))
+
 
             elif message['payload'].startswith("guest_count"):
                 invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
                 if str(message['payload'])[-1] != "2":
-                    invitee_object.invitee_guest_count = int(str(message['payload'])[-1])
+                    invitee_object.invitee_guest_count = int(str(message['payload'])[-1]) + 1
                     invitee_object.save()
+                print(invitee_object.__dict__)
 
                 payload_final_confirmation = {
                     "to_number": conversation,
@@ -786,19 +866,7 @@ def whatsapp(request):
                 response = requests.request("POST", url, headers=headers, data = json.dumps(payload_final_confirmation))
                 print(response.text.encode('utf8'))
 
-            else:
-                invitee_object = Invitee.objects.filter(invitee_phone = "".join(["+",conversation.split("@")[0]]))[0]
-                invitee_object.invitee_rsvp = True
-                invitee_object.invitee_rsvp_reject = True
-                invitee_object.save()
-                payload_final_reject = {
-                    "to_number": conversation,
-                    "type": "text",
-                    "message": "Oh! We are sorry you are not able to attend. Thanks for taking the time to fill out this information"
-                }
-                response = requests.request("POST", url, headers=headers, data = json.dumps(payload_final_reject))
-                print(response.text.encode('utf8'))
-
+            
 
         return HttpResponse("ok")
     else:

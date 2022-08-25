@@ -1,0 +1,98 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" >
+<head>
+  <meta charset="UTF-8">
+  <title>CodePen - Responsive Signup/Login form</title>
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,700|Raleway:300,600" rel="stylesheet">
+  
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel='stylesheet' href='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/css/bootstrap.min.css'>
+<link rel="stylesheet" href="{% static 'invites/css/style.css' %}">
+
+</head>
+<body>
+
+{% if error %}
+   
+   <script>
+      alert('{{ error }}');
+  </script>
+{% endif %}
+
+<!-- partial:index.partial.html -->
+<div class="container">
+   <section id="formHolder">
+
+      <div class="row">
+
+         <!-- Brand Box -->
+         <div class="col-sm-6 brand">
+            <a href="#" class="logo">SV<span>.</span></a>
+
+            <div class="heading">
+               <h2>SmartVent</h2>
+               <p>Your smart event planning partner</p>
+               <h6>{{error|safe}}</h6>
+            </div>
+
+            <div class="success-msg">
+               <p>Great! You are one of our members now</p>
+               <a href="#" class="profile">Your Profile</a>
+            </div>
+         </div>
+
+
+         <!-- Form Box -->
+         <div class="col-sm-6 form">
+
+            <!-- Login Form -->
+            <div class="login form-peice switched">
+               <form class="login-form" action="#" method="post">
+                  {% csrf_token %}
+                     {{loginform.as_p}}
+                     <input type="hidden" name="login" value="login">
+                     {% if request.GET.next %}
+                        <input type="hidden" name="next" value="{{request.GET.next}}">
+                     {% endif %}
+                  <div class="CTA">
+                     <input type="submit" value="Login">
+                     <a href="#" class="switch">I'm New</a>
+                  </div>
+               </form>
+            </div><!-- End Login Form -->
+
+
+            <!-- Signup Form -->
+            <div class="signup form-peice">
+               <form class="signup-form" action="#" method="post">
+
+                  {% csrf_token %}
+                     {{signup_form.as_p}}
+                     <input type="hidden" name="signup" value="signup">
+                     {% if request.GET.next %}
+                        <input type="hidden" name="next" value="{{request.GET.next}}">
+                     {% endif %}
+
+
+                  <div class="CTA">
+                     <input type="submit" value="Signup Now">
+                     <a href="#" class="switch">I have an account</a>
+                  </div>
+               </form>
+            </div><!-- End Signup Form -->
+         </div>
+      </div>
+
+   </section>
+
+
+
+
+</div>
+<!-- partial -->
+<script src='https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.3.7/js/bootstrap.min.js'></script>
+<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.0/jquery.min.js'></script><script  src="{% static 'invites/js/script.js' %}"></script>
+
+</body>
+</html>
