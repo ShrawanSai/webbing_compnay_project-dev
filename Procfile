@@ -1,1 +1,1 @@
-web: gunicorn webbing_compnay.wsgi
+web: gunicorn webbing_compnay.wsgi --log-file -
