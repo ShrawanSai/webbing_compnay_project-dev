@@ -1,5 +1,4 @@
 from email import message
-from turtle import update
 from django.db import IntegrityError
 from django.dispatch import receiver
 from django.shortcuts import render,redirect, get_object_or_404, HttpResponse
