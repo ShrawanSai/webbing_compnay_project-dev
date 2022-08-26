@@ -36,7 +36,7 @@ DEBUG = False
 IS_HEROKU = "DYNO" in os.environ
 
 if IS_HEROKU:
-    ALLOWED_HOSTS = ["*"]
+    ALLOWED_HOSTS = ["https://utsava.herokuapp.com/"]
 else:
     ALLOWED_HOSTS = ["ef86-2405-201-c00e-f09f-45e4-8fc3-4ae8-8301.in.ngrok.io","127.0.0.1"]
 
