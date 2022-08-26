@@ -25,6 +25,9 @@
     <h5>This event is scheduled for : {{ event.eventstartdate }}</h5>
 {% endif %}
 
+{{ form.media.js }}
+{{ form.media.css }}
+
 <form method="POST" enctype='multipart/form-data'>
     {% csrf_token %}
     {{form.as_p}}
