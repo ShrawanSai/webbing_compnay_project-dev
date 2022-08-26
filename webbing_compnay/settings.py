@@ -12,6 +12,11 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import mimetypes
+import dj_database_url
+from django.test.runner import DiscoverRunner
+from pathlib import Path
+
+
 mimetypes.add_type("text/css", ".css", True)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
@@ -27,7 +32,19 @@ SECRET_KEY = 'z!cz8v!l7n05%1flwwy&g2)*$(#$ywj9tv+s*c4p^lthl^&=xf'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["ef86-2405-201-c00e-f09f-45e4-8fc3-4ae8-8301.in.ngrok.io","127.0.0.1"]
+## HEROKU stuff
+IS_HEROKU = "DYNO" in os.environ
+
+if IS_HEROKU:
+    ALLOWED_HOSTS = ["*"]
+else:
+    ALLOWED_HOSTS = ["ef86-2405-201-c00e-f09f-45e4-8fc3-4ae8-8301.in.ngrok.io","127.0.0.1"]
+
+if not IS_HEROKU:
+    DEBUG = True
+
+
+
 CSRF_TRUSTED_ORIGINS = ["https://ef86-2405-201-c00e-f09f-45e4-8fc3-4ae8-8301.in.ngrok.io","http://127.0.0.1:8000"]
 AUTH_USER_MODEL = "accounts.Account"
 
@@ -48,6 +65,7 @@ INSTALLED_APPS = [
     'ckeditor',
     'phonenumber_field',
     'accounts',
+    'storages',
 ]
 
 MIDDLEWARE = [
@@ -91,6 +109,14 @@ DATABASES = {
     }
 }
 
+if "DATABASE_URL" in os.environ:
+    # Configure Django for DATABASE_URL environment variable.
+    DATABASES["default"] = dj_database_url.config(
+        conn_max_age=MAX_CONN_AGE, ssl_require=True)
+
+    # Enable test database if found in CI environment.
+    if "CI" in os.environ:
+        DATABASES["default"]["TEST"] = DATABASES["default"]
 
 # Password validation
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
@@ -125,8 +151,22 @@ USE_L10N = True
 USE_TZ = True
 
 
+
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/3.0/howto/static-files/
+
+DEFAULT_FILE_STORAGE = 'backend.custom_azure.AzureMediaStorage'
+STATICFILES_STORAGE = 'backend.custom_azure.AzureStaticStorage'
+
+STATIC_LOCATION = "static"
+MEDIA_LOCATION = "media"
+
+
+AZURE_ACCOUNT_NAME = "djangostoragewc"
+AZURE_CUSTOM_DOMAIN = f'{AZURE_ACCOUNT_NAME}.blob.core.windows.net'
+STATIC_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{STATIC_LOCATION}/'
+MEDIA_URL = f'https://{AZURE_CUSTOM_DOMAIN}/{MEDIA_LOCATION}/'
 
 STATIC_URL = '/static/'
 
@@ -145,3 +185,17 @@ EMAIL_HOST_USER = 'msaishrawan@gmail.com'
 EMAIL_HOST_PASSWORD = 'qjpsvtvywyvryvtw'
 
 LOGIN_URL = '/login'
+
+
+class HerokuDiscoverRunner(DiscoverRunner):
+    """Test Runner for Heroku CI, which provides a database for you.
+    This requires you to set the TEST database (done for you by settings().)"""
+
+    def setup_databases(self, **kwargs):
+        self.keepdb = True
+        return super(HerokuDiscoverRunner, self).setup_databases(**kwargs)
+
+
+# Use HerokuDiscoverRunner on Heroku CI
+if "CI" in os.environ:
+    TEST_RUNNER = "webbing_compnay.settings.HerokuDiscoverRunner"

@@ -70,7 +70,7 @@
     <!-- Navbar Start -->
     <nav class="navbar navbar-expand-lg bg-white navbar-light sticky-top p-0">
         <a href="{% url 'events:gallery' event.eventcode %}" class="navbar-brand d-flex align-items-center border-end px-4 px-lg-5">
-            <h2 class="m-0 text-primary">{{ event.title }} : Gallery</h2>
+            <h2 class="m-0 text-primary">Birthday Gallery</h2>
         </a>
         <button type="button" class="navbar-toggler me-4" data-bs-toggle="collapse" data-bs-target="#navbarCollapse">
             <span class="navbar-toggler-icon"></span>
@@ -293,21 +293,21 @@
                 </div>
                 <div class="col-lg-6 quote-text py-5 wow fadeIn" data-wow-delay="0.5s">
                     <div class="p-lg-5 pe-lg-0">
-                        <h1 class="mb-4">Upload Album</h1>
+                        <h1 class="mb-4">Upload an Album</h1>
                         <p class="mb-4 pb-2">We would love to recieve your photos. Please upload your photos in an album here. Once {{event.user}} has approved it, It will be visible for everyone to see</p>
                         <form method="POST" enctype='multipart/form-data'>
                             {% csrf_token %}
                             <div class="row g-3">
                                 <div class="col-12 col-sm-6">
-                                    <input type="text" name="album_name" class="form-control border-0" placeholder="Album Name" style="height: 55px;">
+                                    <input type="text" name="album_name" class="form-control border-0" placeholder="Album Name" style="height: 55px;" required>
                                 </div>
                                 <div class="col-12 col-sm-6">
                                     <label style="height: 55px;" class="form-control border-0" for="album_thumbnail" >Upload a thumbnail for this Album</label>
-                                    <input type="file" class="form-control border-0" id="album_thumbnail" style="height: 55px;" name="album_thumbnail" >
+                                    <input type="file" class="form-control border-0" id="album_thumbnail" style="height: 55px;" name="album_thumbnail" required>
                                 </div>
                                 <div class="col-12">
                                     <label style="height: 55px;" class="form-control border-0" for="images">Upload Images:</label>
-                                    <input type="file" class="form-control border-0" style="height: 55px;"id="images" name="images" multiple><br><br>
+                                    <input type="file" class="form-control border-0" style="height: 55px;"id="images" name="images" multiple required><br><br>
                                 </div>
                                 <div class="col-12">
                                     <button class="btn btn-primary rounded-pill py-3 px-5" type="submit" name = "guest_album_upload" value = "guest_album_upload">Upload Album</button>

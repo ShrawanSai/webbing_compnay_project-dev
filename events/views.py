@@ -10,7 +10,31 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 import datetime
 
+def check_existing_invites(request):
+    #print(request.user.email)
+    invitations = Invitee.objects.filter(invitee_email = request.user.email)
+    for invite in invitations:
+        if invite.invitee.email != request.user.email:
+            invite.invitee = request.user
+            invite.save()
+        eventcode = invite.eventcode
+        invitation_from = Event.objects.filter(eventcode = eventcode)[0].user
+        if len( Invitation.objects.filter(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from )) == 0:
+            Invitation.objects.create(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from, guest_count = invite.invitee_guest_count,rsvp_reject = invite.invitee_rsvp_reject,rsvp_done = invite.invitee_rsvp )
+            friendship_calculator(invitation_from,request.user)
 
+    
+    
+    invitations = Invitee.objects.filter(invitee_phone = request.user.phone_number)
+    for invite in invitations:
+        if invite.invitee.phone_number != request.user.phone_number:
+            invite.invitee = request.user
+            invite.save()
+        eventcode = invite.eventcode
+        invitation_from = Event.objects.filter(eventcode = eventcode)[0].user
+        if len( Invitation.objects.filter(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from )) == 0:
+            Invitation.objects.create(user = request.user,eventcode = invite.eventcode, invitation_from = invitation_from, guest_count = invite.invitee_guest_count,rsvp_reject = invite.invitee_rsvp_reject,rsvp_done = invite.invitee_rsvp  )
+            friendship_calculator(invitation_from,request.user)
 
 def friendship_calculator(invitation_from,friend):
 
@@ -60,6 +84,7 @@ def eventhomepage(request,eventcode_key):
         rsvp_option = False
         rsvp_status = False
     else:
+        check_existing_invites(request)
         if request.user == event.user:
             visitor = True 
             rsvp_option = False

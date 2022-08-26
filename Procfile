@@ -1,0 +1,1 @@
+web: gunicorn webbing_compnay.wsgi
