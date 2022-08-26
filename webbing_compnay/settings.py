@@ -30,7 +30,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = 'z!cz8v!l7n05%1flwwy&g2)*$(#$ywj9tv+s*c4p^lthl^&=xf'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ## HEROKU stuff
 IS_HEROKU = "DYNO" in os.environ
