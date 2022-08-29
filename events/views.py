@@ -176,9 +176,9 @@ def rsvp(request,eventcode_key):
 @login_required
 def gallery(request,eventcode_key):
     event = Event.objects.filter(eventcode = eventcode_key)[0]
-    invite = Invitation.objects.filter(user = request.user, eventcode = event)
-    if len(invite) == 0 and event.user != request.user:
-        return render(request,'events/not_invited.html') 
+    #invite = Invitation.objects.filter(user = request.user, eventcode = event)
+    #if len(invite) == 0 and event.user != request.user:
+        #return render(request,'events/not_invited.html') 
     if not event.gallery_option:
         return render(request,'events/not_invited.html') 
     
